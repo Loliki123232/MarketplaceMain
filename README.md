@@ -1,7 +1,7 @@
 # 🛍️ Маркетплейс - WPF приложение для управления интернет-магазином
 
 [![.NET](https://img.shields.io/badge/.NET-8.0-blue.svg)](https://dotnet.microsoft.com/)
-[![WPF](https://img.shields.io/badge/WPF-Yes-green.svg)](https://docs.microsoft.com/en-us/dotnet/desktop/wpf/)
+
 
 
 ## 📋 О проекте

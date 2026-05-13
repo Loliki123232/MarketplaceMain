@@ -1,0 +1,86 @@
+﻿<UserControl x:Class="Marketplace.Views.AddEditProductView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Border Background="White" Padding="25" Margin="20">
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Text="{Binding FormTitle}" FontSize="24" FontWeight="Bold" Margin="0,0,0,20"/>
+
+                <!-- Название -->
+                <StackPanel Grid.Row="1" Margin="0,0,0,15">
+                    <TextBlock Text="Название товара" FontWeight="Bold" Margin="0,0,0,5"/>
+                    <TextBox Text="{Binding EditingProduct.Name, UpdateSourceTrigger=PropertyChanged}" Padding="8"/>
+                </StackPanel>
+
+                <!-- Описание -->
+                <StackPanel Grid.Row="2" Margin="0,0,0,15">
+                    <TextBlock Text="Описание" FontWeight="Bold" Margin="0,0,0,5"/>
+                    <TextBox Text="{Binding EditingProduct.Description, UpdateSourceTrigger=PropertyChanged}" 
+                             Height="80" TextWrapping="Wrap" AcceptsReturn="True" Padding="8"/>
+                </StackPanel>
+
+                <!-- URL картинки -->
+                <StackPanel Grid.Row="3" Margin="0,0,0,15">
+                    <TextBlock Text="URL картинки" FontWeight="Bold" Margin="0,0,0,5"/>
+                    <TextBox Text="{Binding EditingProduct.ImageUrl, UpdateSourceTrigger=PropertyChanged}" Padding="8"/>
+                    <TextBlock Text="Пример: https://example.com/image.jpg" FontSize="10" Foreground="Gray" Margin="0,5,0,0"/>
+                </StackPanel>
+
+                <!-- Категория, Цена, Количество -->
+                <Grid Grid.Row="4" Margin="0,0,0,15">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                        <TextBlock Text="Категория" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <ComboBox ItemsSource="{Binding Categories}" DisplayMemberPath="Name" 
+                                  SelectedValue="{Binding EditingProduct.CategoryId}" SelectedValuePath="Id"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Margin="0,0,10,0">
+                        <TextBlock Text="Цена (₽)" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <TextBox Text="{Binding EditingProduct.Price, UpdateSourceTrigger=PropertyChanged}" Padding="8"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="Количество" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <TextBox Text="{Binding EditingProduct.StockQuantity, UpdateSourceTrigger=PropertyChanged}" Padding="8"/>
+                    </StackPanel>
+                </Grid>
+
+                <!-- Рейтинг -->
+                <StackPanel Grid.Row="5" Margin="0,0,0,15" Visibility="{Binding IsNewProduct, Converter={StaticResource BoolToVisibleConverter}}">
+                    <TextBlock Text="Рейтинг (0-5)" FontWeight="Bold" Margin="0,0,0,5"/>
+                    <Slider Minimum="0" Maximum="5" SmallChange="0.5" LargeChange="1" 
+                            Value="{Binding EditingProduct.Rating}" Width="200" HorizontalAlignment="Left"/>
+                    <TextBlock Text="{Binding EditingProduct.Rating, StringFormat={}{0:F1}}" Margin="0,5,0,0"/>
+                </StackPanel>
+
+                <!-- Кнопки -->
+                <StackPanel Grid.Row="6" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+                    <Button Content="Отмена" Width="100" Height="35" Margin="0,0,10,0"
+                            Background="#E9ECEF" Foreground="#495057" BorderThickness="0"
+                            Command="{Binding CancelCommand}"/>
+                    <Button Content="Сохранить" Width="100" Height="35" 
+                            Background="#FF5722" Foreground="White" BorderThickness="0"
+                            Command="{Binding SaveProductCommand}"/>
+                </StackPanel>
+            </Grid>
+        </ScrollViewer>
+    </Border>
+</UserControl>

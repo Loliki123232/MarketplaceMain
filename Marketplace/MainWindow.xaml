@@ -1,0 +1,64 @@
+﻿<Window x:Class="Marketplace.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:viewmodels="clr-namespace:Marketplace.ViewModels"
+        mc:Ignorable="d"
+        Title="🛍️ Маркетплейс - Интернет-магазин" 
+        Height="700" Width="1100"
+        WindowStartupLocation="CenterScreen">
+
+    <Window.DataContext>
+        <viewmodels:MainViewModel/>
+    </Window.DataContext>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="260"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Левая панель -->
+        <Border Grid.Column="0" Background="#2C3E50">
+            <StackPanel Margin="15">
+                <Border Background="#34495E" CornerRadius="10" Padding="15" Margin="0,0,0,25">
+                    <StackPanel HorizontalAlignment="Center">
+                        <TextBlock Text="🛍️" FontSize="32" HorizontalAlignment="Center"/>
+                        <TextBlock Text="МАРКЕТПЛЕЙС" FontSize="14" FontWeight="Bold" Foreground="White" Margin="0,5,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <Button Content="📦 Товары" Style="{StaticResource PrimaryButton}" 
+                        Command="{Binding ShowProductsCommand}" Margin="0,5" Background="#34495E"/>
+
+                <Button Content="🛒 Корзина" Style="{StaticResource PrimaryButton}" 
+                        Command="{Binding ShowCartCommand}" Margin="0,5" Background="#34495E"/>
+
+                <Button Content="📋 Мои заказы" Style="{StaticResource PrimaryButton}" 
+                        Command="{Binding ShowOrdersCommand}" Margin="0,5" Background="#34495E"/>
+
+                <Button Content="➕ Добавить товар" Style="{StaticResource PrimaryButton}" 
+                        Command="{Binding ShowAddProductCommand}" Margin="0,5" Background="#27AE60"/>
+
+                <Separator Margin="0,20,0,15" Background="#555"/>
+
+                <Border Background="#34495E" CornerRadius="10" Padding="12">
+                    <StackPanel>
+                        <TextBlock Text="👤 Иван Иванов" Foreground="White" FontSize="14" FontWeight="Bold"/>
+                        <TextBlock Text="ivanov@mail.ru" Foreground="#AAAAAA" FontSize="11" Margin="0,5,0,0"/>
+                        <TextBlock Text="💰 Баланс: 15 000 ₽" Foreground="#FFD700" FontSize="12" Margin="0,10,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <TextBlock Text="🛡️ Маркетплейс v1.0" FontSize="10" Foreground="#666" 
+                           HorizontalAlignment="Center" Margin="0,20,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Правая панель -->
+        <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto" Background="#F5F5F5">
+            <ContentControl Content="{Binding CurrentContent}"/>
+        </ScrollViewer>
+    </Grid>
+</Window>

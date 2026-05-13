@@ -1,0 +1,47 @@
+﻿<UserControl x:Class="Marketplace.Views.ProductsListView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:views="clr-namespace:Marketplace.Views"
+             ScrollViewer.CanContentScroll="True">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <Grid Margin="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0" Text="📦 Каталог товаров" FontSize="24" FontWeight="Bold" Margin="0,0,0,15"/>
+
+            <Grid Grid.Row="1" Margin="0,0,0,15">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="150"/>
+                    <ColumnDefinition Width="80"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBox Grid.Column="0" Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}"
+                         Margin="0,0,10,0"/>
+
+                <ComboBox Grid.Column="1" ItemsSource="{Binding Categories}" 
+                          DisplayMemberPath="Name" SelectedItem="{Binding SelectedCategory}"
+                          Margin="0,0,10,0"/>
+
+                <Button Grid.Column="2" Content="🔍 Найти" Background="#FF5722" Foreground="White" BorderThickness="0"
+                        Command="{Binding SearchCommand}"/>
+            </Grid>
+
+            <!-- Товары идут вертикально вниз, каждый с одинаковой шириной -->
+            <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding FilteredProducts}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <views:ProductCard DataContext="{Binding}" Margin="0,0,0,10"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Grid>
+    </ScrollViewer>
+</UserControl>

@@ -7,8 +7,9 @@
         <ResourceDictionary>
             <!-- Конвертеры -->
             <converters:IntToVisibilityConverter x:Key="IntToVisibilityConverter"/>
-            <BooleanToVisibilityConverter x:Key="BoolToVisibleConverter"/>
+            <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
             <converters:ImageUrlConverter x:Key="ImageUrlConverter"/>
+            <converters:ReturnStatusToColorConverter x:Key="ReturnStatusToColorConverter"/>
 
             <!-- Стиль для кнопок -->
             <Style x:Key="PrimaryButton" TargetType="Button">

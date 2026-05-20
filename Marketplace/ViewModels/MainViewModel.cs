@@ -10,13 +10,21 @@ using Marketplace.Views;
 
 namespace Marketplace.ViewModels
 {
+    /// <summary>
+    /// Главная ViewModel приложения.
+    /// Управляет навигацией, командами и состоянием интерфейса.
+    /// Реализует паттерн MVVM и интерфейс INotifyPropertyChanged.
+    /// </summary>
     public class MainViewModel : INotifyPropertyChanged
     {
+        // ==================== ПРИВАТНЫЕ ПОЛЯ ====================
+
         private object? _currentContent;
         private ObservableCollection<Product> _products = new();
         private ObservableCollection<Order> _orders = new();
         private ObservableCollection<OrderItem> _cart = new();
         private ObservableCollection<Product> _filteredProducts = new();
+        private ObservableCollection<ReturnRequest> _returnRequests = new();
         private string _searchQuery = "";
         private Category? _selectedCategory;
         private List<Category> _categories = new();
@@ -24,11 +32,18 @@ namespace Marketplace.ViewModels
         private decimal _discountAmount;
         private decimal _finalAmount;
 
+        // Сервисы
         private readonly PriceCalculator _priceCalculator = new();
         private readonly StockValidator _stockValidator = new();
         private readonly ReceiptGenerator _receiptGenerator = new();
         private readonly DatabaseService _databaseService = new();
 
+        // ==================== КОНСТРУКТОР ====================
+
+        /// <summary>
+        /// Инициализирует новый экземпляр MainViewModel.
+        /// Загружает данные из базы данных, инициализирует команды и отображает товары.
+        /// </summary>
         public MainViewModel()
         {
             LoadDataFromDatabase();
@@ -36,6 +51,11 @@ namespace Marketplace.ViewModels
             ShowProducts();
         }
 
+        // ==================== МЕТОДЫ ЗАГРУЗКИ ДАННЫХ ====================
+
+        /// <summary>
+        /// Загружает данные из базы данных: категории, товары, заказы, возвраты.
+        /// </summary>
         private void LoadDataFromDatabase()
         {
             if (!_databaseService.TestConnection())
@@ -44,6 +64,7 @@ namespace Marketplace.ViewModels
             _categories = _databaseService.GetAllCategories();
             _products = _databaseService.GetAllProducts();
             _orders = _databaseService.GetOrdersByUser(1);
+            _returnRequests = _databaseService.GetReturnRequestsByUser(1);
 
             foreach (var product in _products)
             {
@@ -55,12 +76,204 @@ namespace Marketplace.ViewModels
             _cart = new ObservableCollection<OrderItem>();
         }
 
+        // ==================== СВОЙСТВА ====================
+
+        /// <summary>
+        /// Коллекция заявок на возврат.
+        /// </summary>
+        public ObservableCollection<ReturnRequest> ReturnRequests
+        {
+            get => _returnRequests;
+            set { _returnRequests = value; OnPropertyChanged(); }
+        }
+
+        /// <summary>
+        /// Отфильтрованный список товаров для отображения.
+        /// </summary>
         public ObservableCollection<Product> FilteredProducts
         {
             get => _filteredProducts;
             set { _filteredProducts = value; OnPropertyChanged(); }
         }
 
+        /// <summary>
+        /// Текущее содержимое области контента (View).
+        /// </summary>
+        public object? CurrentContent
+        {
+            get => _currentContent;
+            set { _currentContent = value; OnPropertyChanged(); }
+        }
+
+        /// <summary>
+        /// Полный список товаров.
+        /// </summary>
+        public ObservableCollection<Product> Products
+        {
+            get => _products;
+            set { _products = value; OnPropertyChanged(); }
+        }
+
+        /// <summary>
+        /// Список заказов пользователя.
+        /// </summary>
+        public ObservableCollection<Order> Orders
+        {
+            get => _orders;
+            set { _orders = value; OnPropertyChanged(); }
+        }
+
+        /// <summary>
+        /// Корзина пользователя.
+        /// </summary>
+        public ObservableCollection<OrderItem> Cart
+        {
+            get => _cart;
+            set { _cart = value; OnPropertyChanged(); }
+        }
+
+        /// <summary>
+        /// Строка поиска для фильтрации товаров.
+        /// </summary>
+        public string SearchQuery
+        {
+            get => _searchQuery;
+            set { _searchQuery = value; OnPropertyChanged(); }
+        }
+
+        /// <summary>
+        /// Выбранная категория для фильтрации.
+        /// </summary>
+        public Category? SelectedCategory
+        {
+            get => _selectedCategory;
+            set { _selectedCategory = value; OnPropertyChanged(); }
+        }
+
+        /// <summary>
+        /// Список всех категорий товаров.
+        /// </summary>
+        public List<Category> Categories => _categories;
+
+        /// <summary>
+        /// Общая стоимость заказа без скидки.
+        /// </summary>
+        public decimal TotalAmount
+        {
+            get => _totalAmount;
+            set { _totalAmount = value; OnPropertyChanged(); }
+        }
+
+        /// <summary>
+        /// Сумма скидки.
+        /// </summary>
+        public decimal DiscountAmount
+        {
+            get => _discountAmount;
+            set { _discountAmount = value; OnPropertyChanged(); }
+        }
+
+        /// <summary>
+        /// Итоговая стоимость с учётом скидки.
+        /// </summary>
+        public decimal FinalAmount
+        {
+            get => _finalAmount;
+            set { _finalAmount = value; OnPropertyChanged(); }
+        }
+
+        // ==================== КОМАНДЫ ====================
+
+        /// <summary>
+        /// Команда отображения списка товаров.
+        /// </summary>
+        public ICommand ShowProductsCommand { get; private set; }
+
+        /// <summary>
+        /// Команда отображения корзины.
+        /// </summary>
+        public ICommand ShowCartCommand { get; private set; }
+
+        /// <summary>
+        /// Команда отображения истории заказов.
+        /// </summary>
+        public ICommand ShowOrdersCommand { get; private set; }
+
+        /// <summary>
+        /// Команда отображения формы добавления товара.
+        /// </summary>
+        public ICommand ShowAddProductCommand { get; private set; }
+
+        /// <summary>
+        /// Команда отображения истории возвратов.
+        /// </summary>
+        public ICommand ShowReturnsCommand { get; private set; }
+
+        /// <summary>
+        /// Команда добавления товара в корзину.
+        /// </summary>
+        public ICommand AddToCartCommand { get; private set; }
+
+        /// <summary>
+        /// Команда удаления товара из корзины.
+        /// </summary>
+        public ICommand RemoveFromCartCommand { get; private set; }
+
+        /// <summary>
+        /// Команда увеличения количества товара в корзине.
+        /// </summary>
+        public ICommand IncreaseQuantityCommand { get; private set; }
+
+        /// <summary>
+        /// Команда уменьшения количества товара в корзине.
+        /// </summary>
+        public ICommand DecreaseQuantityCommand { get; private set; }
+
+        /// <summary>
+        /// Команда оформления заказа.
+        /// </summary>
+        public ICommand PlaceOrderCommand { get; private set; }
+
+        /// <summary>
+        /// Команда поиска товаров.
+        /// </summary>
+        public ICommand SearchCommand { get; private set; }
+
+        /// <summary>
+        /// Команда фильтрации товаров по категории.
+        /// </summary>
+        public ICommand FilterByCategoryCommand { get; private set; }
+
+        /// <summary>
+        /// Команда оформления возврата товара.
+        /// </summary>
+        public ICommand RequestReturnCommand { get; private set; }
+
+        // ==================== МЕТОДЫ ====================
+
+        /// <summary>
+        /// Инициализирует все команды приложения.
+        /// </summary>
+        private void InitializeCommands()
+        {
+            ShowProductsCommand = new RelayCommand(_ => ShowProducts());
+            ShowCartCommand = new RelayCommand(_ => ShowCart());
+            ShowOrdersCommand = new RelayCommand(_ => ShowOrders());
+            ShowAddProductCommand = new RelayCommand(_ => ShowAddProduct());
+            ShowReturnsCommand = new RelayCommand(_ => ShowReturns());
+            AddToCartCommand = new RelayCommand(AddToCart);
+            RemoveFromCartCommand = new RelayCommand(RemoveFromCart);
+            IncreaseQuantityCommand = new RelayCommand(IncreaseQuantity);
+            DecreaseQuantityCommand = new RelayCommand(DecreaseQuantity);
+            PlaceOrderCommand = new RelayCommand(PlaceOrder, _ => Cart.Count > 0);
+            SearchCommand = new RelayCommand(_ => ApplyFilter());
+            FilterByCategoryCommand = new RelayCommand(_ => ApplyFilter());
+            RequestReturnCommand = new RelayCommand(RequestReturn);
+        }
+
+        /// <summary>
+        /// Применяет фильтрацию товаров по поисковому запросу и категории.
+        /// </summary>
         private void ApplyFilter()
         {
             var filtered = _products.AsEnumerable();
@@ -75,21 +288,9 @@ namespace Marketplace.ViewModels
             FilteredProducts = new ObservableCollection<Product>(filtered);
         }
 
-        private void InitializeCommands()
-        {
-            ShowProductsCommand = new RelayCommand(_ => ShowProducts());
-            ShowCartCommand = new RelayCommand(_ => ShowCart());
-            ShowOrdersCommand = new RelayCommand(_ => ShowOrders());
-            ShowAddProductCommand = new RelayCommand(_ => ShowAddProduct());
-            AddToCartCommand = new RelayCommand(AddToCart);
-            RemoveFromCartCommand = new RelayCommand(RemoveFromCart);
-            IncreaseQuantityCommand = new RelayCommand(IncreaseQuantity);
-            DecreaseQuantityCommand = new RelayCommand(DecreaseQuantity);
-            PlaceOrderCommand = new RelayCommand(PlaceOrder, _ => Cart.Count > 0);
-            SearchCommand = new RelayCommand(_ => ApplyFilter());
-            FilterByCategoryCommand = new RelayCommand(_ => ApplyFilter());
-        }
-
+        /// <summary>
+        /// Отображает каталог товаров.
+        /// </summary>
         public void ShowProducts()
         {
             ApplyFilter();
@@ -98,6 +299,9 @@ namespace Marketplace.ViewModels
             CurrentContent = productsView;
         }
 
+        /// <summary>
+        /// Отображает корзину с выбранными товарами.
+        /// </summary>
         private void ShowCart()
         {
             var totals = _priceCalculator.CalculateOrderTotals(Cart.ToList());
@@ -107,16 +311,37 @@ namespace Marketplace.ViewModels
             CurrentContent = new CartView(Cart, this);
         }
 
-        private void ShowOrders()
+        /// <summary>
+        /// Отображает историю заказов пользователя.
+        /// </summary>
+        public void ShowOrders()
         {
             CurrentContent = new OrderHistoryView(Orders, this);
         }
 
+        /// <summary>
+        /// Отображает историю возвратов пользователя.
+        /// </summary>
+        public void ShowReturns()
+        {
+            _returnRequests = _databaseService.GetReturnRequestsByUser(1);
+            var returnHistoryView = new ReturnHistoryView();
+            returnHistoryView.DataContext = this;
+            CurrentContent = returnHistoryView;
+        }
+
+        /// <summary>
+        /// Отображает форму добавления нового товара.
+        /// </summary>
         private void ShowAddProduct()
         {
             CurrentContent = new AddEditProductView(null, Categories, this);
         }
 
+        /// <summary>
+        /// Добавляет товар в корзину.
+        /// </summary>
+        /// <param name="parameter">Товар для добавления.</param>
         private void AddToCart(object? parameter)
         {
             if (parameter is Product product)
@@ -139,6 +364,10 @@ namespace Marketplace.ViewModels
             }
         }
 
+        /// <summary>
+        /// Удаляет товар из корзины.
+        /// </summary>
+        /// <param name="parameter">Товар для удаления.</param>
         private void RemoveFromCart(object? parameter)
         {
             if (parameter is OrderItem item)
@@ -148,6 +377,10 @@ namespace Marketplace.ViewModels
             }
         }
 
+        /// <summary>
+        /// Увеличивает количество товара в корзине.
+        /// </summary>
+        /// <param name="parameter">Товар для увеличения количества.</param>
         private void IncreaseQuantity(object? parameter)
         {
             if (parameter is OrderItem item)
@@ -157,6 +390,10 @@ namespace Marketplace.ViewModels
             }
         }
 
+        /// <summary>
+        /// Уменьшает количество товара в корзине.
+        /// </summary>
+        /// <param name="parameter">Товар для уменьшения количества.</param>
         private void DecreaseQuantity(object? parameter)
         {
             if (parameter is OrderItem item && item.Quantity > 1)
@@ -171,6 +408,11 @@ namespace Marketplace.ViewModels
             }
         }
 
+        /// <summary>
+        /// Оформляет заказ: проверяет наличие товаров, рассчитывает скидку,
+        /// сохраняет заказ в БД, обновляет остатки и формирует чек.
+        /// </summary>
+        /// <param name="parameter">Не используется.</param>
         private void PlaceOrder(object? parameter)
         {
             if (Cart.Count == 0)
@@ -195,7 +437,7 @@ namespace Marketplace.ViewModels
                 UserName = "Иван Иванов",
                 OrderDate = DateTime.Now,
                 Items = Cart.ToList(),
-                Status = "pending",
+                Status = "delivered",
                 TotalAmount = totals.TotalAmount,
                 DiscountAmount = totals.Discount,
                 FinalAmount = totals.FinalAmount,
@@ -220,18 +462,48 @@ namespace Marketplace.ViewModels
             ShowProducts();
         }
 
+        /// <summary>
+        /// Обрабатывает запрос на возврат товара.
+        /// </summary>
+        /// <param name="parameter">Заказ, из которого выполняется возврат.</param>
+        private void RequestReturn(object? parameter)
+        {
+            if (parameter is Order order)
+            {
+                if (order.Items.Count == 1)
+                {
+                    var orderItem = order.Items.First();
+                    var validation = new ReturnValidator().CanReturnProduct(order, orderItem, orderItem.Quantity);
+
+                    if (!validation.IsValid)
+                    {
+                        MessageBox.Show(validation.Message, "Возврат невозможен", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
+
+                    CurrentContent = new ReturnRequestView(new ReturnRequestViewModel(order, orderItem, this));
+                }
+                else
+                {
+                    var selectProductView = new SelectProductForReturnView(order, this);
+                    CurrentContent = selectProductView;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Сохраняет товар (добавляет новый или обновляет существующий).
+        /// </summary>
+        /// <param name="product">Товар для сохранения.</param>
         public void SaveProduct(Product product)
         {
             if (product.Id == 0)
             {
-                
                 product.SellerId = 1;
-                
                 _databaseService.AddProduct(product);
             }
             else
             {
-                
                 _databaseService.UpdateProduct(product);
             }
 
@@ -239,95 +511,59 @@ namespace Marketplace.ViewModels
             ShowProducts();
         }
 
-        // Свойства
-        public object? CurrentContent
-        {
-            get => _currentContent;
-            set { _currentContent = value; OnPropertyChanged(); }
-        }
+        // ==================== INotifyPropertyChanged ====================
 
-        public ObservableCollection<Product> Products
-        {
-            get => _products;
-            set { _products = value; OnPropertyChanged(); }
-        }
-
-        public ObservableCollection<Order> Orders
-        {
-            get => _orders;
-            set { _orders = value; OnPropertyChanged(); }
-        }
-
-        public ObservableCollection<OrderItem> Cart
-        {
-            get => _cart;
-            set { _cart = value; OnPropertyChanged(); }
-        }
-
-        public string SearchQuery
-        {
-            get => _searchQuery;
-            set { _searchQuery = value; OnPropertyChanged(); }
-        }
-
-        public Category? SelectedCategory
-        {
-            get => _selectedCategory;
-            set { _selectedCategory = value; OnPropertyChanged(); }
-        }
-
-        public List<Category> Categories => _categories;
-
-        public decimal TotalAmount
-        {
-            get => _totalAmount;
-            set { _totalAmount = value; OnPropertyChanged(); }
-        }
-
-        public decimal DiscountAmount
-        {
-            get => _discountAmount;
-            set { _discountAmount = value; OnPropertyChanged(); }
-        }
-
-        public decimal FinalAmount
-        {
-            get => _finalAmount;
-            set { _finalAmount = value; OnPropertyChanged(); }
-        }
-
-        // Команды
-        public ICommand ShowProductsCommand { get; private set; }
-        public ICommand ShowCartCommand { get; private set; }
-        public ICommand ShowOrdersCommand { get; private set; }
-        public ICommand ShowAddProductCommand { get; private set; }
-        public ICommand AddToCartCommand { get; private set; }
-        public ICommand RemoveFromCartCommand { get; private set; }
-        public ICommand IncreaseQuantityCommand { get; private set; }
-        public ICommand DecreaseQuantityCommand { get; private set; }
-        public ICommand PlaceOrderCommand { get; private set; }
-        public ICommand SearchCommand { get; private set; }
-        public ICommand FilterByCategoryCommand { get; private set; }
-
+        /// <summary>
+        /// Событие уведомления об изменении свойства.
+        /// </summary>
         public event PropertyChangedEventHandler? PropertyChanged;
+
+        /// <summary>
+        /// Вызывает событие PropertyChanged.
+        /// </summary>
+        /// <param name="name">Имя изменившегося свойства.</param>
         protected void OnPropertyChanged([CallerMemberName] string? name = null) =>
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name ?? ""));
     }
 
     // ==================== КЛАСС RELAYCOMMAND ====================
+
+    /// <summary>
+    /// Реализация интерфейса ICommand для использования в MVVM.
+    /// Позволяет связывать действия пользователя с методами ViewModel.
+    /// </summary>
     public class RelayCommand : ICommand
     {
         private readonly Action<object?> _execute;
         private readonly Predicate<object?>? _canExecute;
 
+        /// <summary>
+        /// Инициализирует новый экземпляр RelayCommand.
+        /// </summary>
+        /// <param name="execute">Метод, выполняемый командой.</param>
+        /// <param name="canExecute">Метод, определяющий возможность выполнения команды (опционально).</param>
         public RelayCommand(Action<object?> execute, Predicate<object?>? canExecute = null)
         {
             _execute = execute ?? throw new ArgumentNullException(nameof(execute));
             _canExecute = canExecute;
         }
 
+        /// <summary>
+        /// Определяет, может ли команда выполняться в текущем состоянии.
+        /// </summary>
+        /// <param name="parameter">Параметр команды.</param>
+        /// <returns>true - если команда может быть выполнена, иначе false.</returns>
         public bool CanExecute(object? parameter) => _canExecute == null || _canExecute(parameter);
+
+        /// <summary>
+        /// Выполняет команду.
+        /// </summary>
+        /// <param name="parameter">Параметр команды.</param>
         public void Execute(object? parameter) => _execute(parameter);
+
+        /// <summary>
+        /// Событие, возникающее при изменении возможности выполнения команды.
+        /// </summary>
         public event EventHandler? CanExecuteChanged
         {
             add { CommandManager.RequerySuggested += value; }

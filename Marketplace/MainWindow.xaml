@@ -22,6 +22,7 @@
         <!-- Левая панель -->
         <Border Grid.Column="0" Background="#2C3E50">
             <StackPanel Margin="15">
+                <!-- Логотип -->
                 <Border Background="#34495E" CornerRadius="10" Padding="15" Margin="0,0,0,25">
                     <StackPanel HorizontalAlignment="Center">
                         <TextBlock Text="🛍️" FontSize="32" HorizontalAlignment="Center"/>
@@ -29,6 +30,7 @@
                     </StackPanel>
                 </Border>
 
+                <!-- Навигация -->
                 <Button Content="📦 Товары" Style="{StaticResource PrimaryButton}" 
                         Command="{Binding ShowProductsCommand}" Margin="0,5" Background="#34495E"/>
 
@@ -38,11 +40,16 @@
                 <Button Content="📋 Мои заказы" Style="{StaticResource PrimaryButton}" 
                         Command="{Binding ShowOrdersCommand}" Margin="0,5" Background="#34495E"/>
 
+                <!-- Кнопка "Возвраты" (добавлена) -->
+                <Button Content="🔄 Возвраты" Style="{StaticResource PrimaryButton}" 
+                        Command="{Binding ShowReturnsCommand}" Margin="0,5" Background="#17A2B8"/>
+
                 <Button Content="➕ Добавить товар" Style="{StaticResource PrimaryButton}" 
                         Command="{Binding ShowAddProductCommand}" Margin="0,5" Background="#27AE60"/>
 
                 <Separator Margin="0,20,0,15" Background="#555"/>
 
+                <!-- Информация о пользователе -->
                 <Border Background="#34495E" CornerRadius="10" Padding="12">
                     <StackPanel>
                         <TextBlock Text="👤 Иван Иванов" Foreground="White" FontSize="14" FontWeight="Bold"/>
@@ -51,12 +58,13 @@
                     </StackPanel>
                 </Border>
 
-                <TextBlock Text="🛡️ Маркетплейс v1.0" FontSize="10" Foreground="#666" 
+                <!-- Версия -->
+                <TextBlock Text="🛡️ Маркетплейс v2.0" FontSize="10" Foreground="#666" 
                            HorizontalAlignment="Center" Margin="0,20,0,0"/>
             </StackPanel>
         </Border>
 
-        <!-- Правая панель -->
+        <!-- Правая панель (контент) -->
         <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto" Background="#F5F5F5">
             <ContentControl Content="{Binding CurrentContent}"/>
         </ScrollViewer>

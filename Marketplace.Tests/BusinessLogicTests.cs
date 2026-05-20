@@ -6,7 +6,7 @@ using System.Collections.Generic;
 namespace Marketplace.Tests
 {
     /// <summary>
-    /// Модульные тесты для проверки бизнес-логики маркетплейса
+    /// РњРѕРґСѓР»СЊРЅС‹Рµ С‚РµСЃС‚С‹ РґР»СЏ РїСЂРѕРІРµСЂРєРё Р±РёР·РЅРµСЃ-Р»РѕРіРёРєРё РјР°СЂРєРµС‚РїР»РµР№СЃР°
     /// </summary>
     public class BusinessLogicTests
     {
@@ -22,7 +22,7 @@ namespace Marketplace.Tests
         }
 
         /// <summary>
-        /// Тест 1: Проверка расчёта итоговой стоимости заказа
+        /// РўРµСЃС‚ 1: РџСЂРѕРІРµСЂРєР° СЂР°СЃС‡С‘С‚Р° РёС‚РѕРіРѕРІРѕР№ СЃС‚РѕРёРјРѕСЃС‚Рё Р·Р°РєР°Р·Р°
         /// </summary>
         [Fact]
         public void CalculateTotalAmount_WithMultipleItems_ReturnsCorrectSum()
@@ -43,7 +43,7 @@ namespace Marketplace.Tests
         }
 
         /// <summary>
-        /// Тест 2: Проверка расчёта скидки при разных суммах заказа
+        /// РўРµСЃС‚ 2: РџСЂРѕРІРµСЂРєР° СЂР°СЃС‡С‘С‚Р° СЃРєРёРґРєРё РїСЂРё СЂР°Р·РЅС‹С… СЃСѓРјРјР°С… Р·Р°РєР°Р·Р°
         /// </summary>
         [Theory]
         [InlineData(500, 0)]
@@ -61,7 +61,7 @@ namespace Marketplace.Tests
         }
 
         /// <summary>
-        /// Тест 3: Проверка наличия товара на складе
+        /// РўРµСЃС‚ 3: РџСЂРѕРІРµСЂРєР° РЅР°Р»РёС‡РёСЏ С‚РѕРІР°СЂР° РЅР° СЃРєР»Р°РґРµ
         /// </summary>
         [Theory]
         [InlineData(10, 5, true)]
@@ -71,7 +71,7 @@ namespace Marketplace.Tests
         public void IsProductAvailable_WithDifferentStock_ReturnsCorrectResult(int stock, int requested, bool expected)
         {
             // Arrange
-            var product = new Product { Id = 1, Name = "Тестовый товар", StockQuantity = stock };
+            var product = new Product { Id = 1, Name = "РўРµСЃС‚РѕРІС‹Р№ С‚РѕРІР°СЂ", StockQuantity = stock };
 
             // Act
             var isAvailable = _stockValidator.IsProductAvailable(product, requested);
@@ -81,7 +81,7 @@ namespace Marketplace.Tests
         }
 
         /// <summary>
-        /// Тест 4: Проверка формирования чека
+        /// РўРµСЃС‚ 4: РџСЂРѕРІРµСЂРєР° С„РѕСЂРјРёСЂРѕРІР°РЅРёСЏ С‡РµРєР°
         /// </summary>
         [Fact]
         public void GenerateReceipt_WithValidOrder_ReturnsNonEmptyReceipt()
@@ -90,11 +90,11 @@ namespace Marketplace.Tests
             var order = new Order
             {
                 Id = 1,
-                UserName = "Тестовый пользователь",
+                UserName = "РўРµСЃС‚РѕРІС‹Р№ РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ",
                 OrderDate = System.DateTime.Now,
                 Items = new List<OrderItem>
                 {
-                    new() { ProductName = "Тестовый товар", Quantity = 2, UnitPrice = 1000 }
+                    new() { ProductName = "РўРµСЃС‚РѕРІС‹Р№ С‚РѕРІР°СЂ", Quantity = 2, UnitPrice = 1000 }
                 }
             };
 
@@ -103,8 +103,8 @@ namespace Marketplace.Tests
 
             // Assert
             Assert.NotNull(receipt);
-            Assert.Contains("ЧЕК ЗАКАЗА", receipt);
-            Assert.Contains("Тестовый товар", receipt);
+            Assert.Contains("Р§Р•Рљ Р—РђРљРђР—Рђ", receipt);
+            Assert.Contains("РўРµСЃС‚РѕРІС‹Р№ С‚РѕРІР°СЂ", receipt);
         }
     }
 }

@@ -7,6 +7,7 @@
         <ResourceDictionary>
             <!-- Конвертеры -->
             <converters:IntToVisibilityConverter x:Key="IntToVisibilityConverter"/>
+            <converters:BoolToColorConverter x:Key="BoolToColorConverter"/>
             <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
             <converters:ImageUrlConverter x:Key="ImageUrlConverter"/>
             <converters:ReturnStatusToColorConverter x:Key="ReturnStatusToColorConverter"/>

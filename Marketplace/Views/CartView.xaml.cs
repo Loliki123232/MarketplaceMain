@@ -12,6 +12,7 @@ namespace Marketplace.Views
             InitializeComponent();
             DataContext = viewModel;
 
+            // Привязываем корзину
             var itemsControl = FindName("CartItemsControl") as ItemsControl;
             if (itemsControl != null)
                 itemsControl.ItemsSource = cart;

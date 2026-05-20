@@ -316,7 +316,94 @@ namespace Marketplace.DataAccess
                 return command.ExecuteScalar()?.ToString() ?? "";
             }
         }
+        // ==================== ПРОМОКОДЫ ====================
 
+        /// <summary>
+        /// Получает промокод по его коду
+        /// </summary>
+        /// <param name="code">Код промокода</param>
+        /// <returns>Промокод или null, если не найден</returns>
+        public PromoCode GetPromoCodeByCode(string code)
+        {
+            using (var connection = new SqlConnection(ConnectionString))
+            {
+                connection.Open();
+                var command = new SqlCommand(
+                    "SELECT * FROM PromoCodes WHERE Code = @Code",
+                    connection);
+                command.Parameters.AddWithValue("@Code", code);
+
+                using (var reader = command.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        return new PromoCode
+                        {
+                            Id = reader.GetInt32(0),
+                            Code = reader.GetString(1),
+                            DiscountType = reader.GetString(2),
+                            DiscountValue = reader.GetDecimal(3),
+                            StartDate = reader.GetDateTime(4),
+                            EndDate = reader.GetDateTime(5),
+                            MinOrderAmount = reader.GetDecimal(6),
+                            IsActive = reader.GetBoolean(7),
+                            UsageLimit = reader.IsDBNull(8) ? null : reader.GetInt32(8),
+                            CreatedAt = reader.GetDateTime(9)
+                        };
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Получает количество использований промокода пользователем
+        /// </summary>
+        /// <param name="promoCodeId">ID промокода</param>
+        /// <param name="userId">ID пользователя</param>
+        /// <returns>Количество использований</returns>
+        public int GetUserPromoCodeUsageCount(int promoCodeId, int userId)
+        {
+            using (var connection = new SqlConnection(ConnectionString))
+            {
+                connection.Open();
+                var command = new SqlCommand(
+                    "SELECT COUNT(*) FROM UserPromoCodes WHERE PromoCodeId = @PromoCodeId AND UserId = @UserId",
+                    connection);
+                command.Parameters.AddWithValue("@PromoCodeId", promoCodeId);
+                command.Parameters.AddWithValue("@UserId", userId);
+
+                return Convert.ToInt32(command.ExecuteScalar());
+            }
+        }
+
+        /// <summary>
+        /// Сохраняет информацию об использовании промокода
+        /// </summary>
+        /// <param name="promoCodeId">ID промокода</param>
+        /// <param name="userId">ID пользователя</param>
+        /// <param name="orderId">ID заказа</param>
+        /// <param name="discountApplied">Применённая скидка</param>
+        public void SavePromoCodeUsage(int promoCodeId, int userId, int orderId, decimal discountApplied)
+        {
+            using (var connection = new SqlConnection(ConnectionString))
+            {
+                connection.Open();
+                var command = new SqlCommand(
+                    @"INSERT INTO UserPromoCodes (PromoCodeId, UserId, OrderId, DiscountApplied, UsedAt) 
+              VALUES (@PromoCodeId, @UserId, @OrderId, @DiscountApplied, @UsedAt)",
+                    connection);
+
+                command.Parameters.AddWithValue("@PromoCodeId", promoCodeId);
+                command.Parameters.AddWithValue("@UserId", userId);
+                command.Parameters.AddWithValue("@OrderId", orderId);
+                command.Parameters.AddWithValue("@DiscountApplied", discountApplied);
+                command.Parameters.AddWithValue("@UsedAt", DateTime.Now);
+
+                command.ExecuteNonQuery();
+            }
+        }
         // ==================== ВОЗВРАТЫ ====================
 
         /// <summary>

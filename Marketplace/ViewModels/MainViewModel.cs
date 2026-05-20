@@ -32,11 +32,19 @@ namespace Marketplace.ViewModels
         private decimal _discountAmount;
         private decimal _finalAmount;
 
+        // Поля для промокодов
+        private string _promoCode = "";
+        private string _promoCodeMessage = "";
+        private bool _promoCodeSuccess;
+        private decimal _promoDiscountAmount;
+        private PromoCode? _appliedPromoCode;
+
         // Сервисы
         private readonly PriceCalculator _priceCalculator = new();
         private readonly StockValidator _stockValidator = new();
         private readonly ReceiptGenerator _receiptGenerator = new();
         private readonly DatabaseService _databaseService = new();
+        private readonly PromoCodeService _promoCodeService = new();
 
         // ==================== КОНСТРУКТОР ====================
 
@@ -106,6 +114,42 @@ namespace Marketplace.ViewModels
         }
 
         /// <summary>
+        /// Код промокода, введённый пользователем.
+        /// </summary>
+        public string PromoCode
+        {
+            get => _promoCode;
+            set { _promoCode = value; OnPropertyChanged(); }
+        }
+
+        /// <summary>
+        /// Сообщение о результате применения промокода.
+        /// </summary>
+        public string PromoCodeMessage
+        {
+            get => _promoCodeMessage;
+            set { _promoCodeMessage = value; OnPropertyChanged(); }
+        }
+
+        /// <summary>
+        /// Успешно ли применён промокод.
+        /// </summary>
+        public bool PromoCodeSuccess
+        {
+            get => _promoCodeSuccess;
+            set { _promoCodeSuccess = value; OnPropertyChanged(); }
+        }
+
+        /// <summary>
+        /// Сумма скидки по промокоду.
+        /// </summary>
+        public decimal PromoDiscountAmount
+        {
+            get => _promoDiscountAmount;
+            set { _promoDiscountAmount = value; OnPropertyChanged(); }
+        }
+
+        /// <summary>
         /// Полный список товаров.
         /// </summary>
         public ObservableCollection<Product> Products
@@ -165,7 +209,7 @@ namespace Marketplace.ViewModels
         }
 
         /// <summary>
-        /// Сумма скидки.
+        /// Сумма скидки (от суммы заказа).
         /// </summary>
         public decimal DiscountAmount
         {
@@ -174,7 +218,7 @@ namespace Marketplace.ViewModels
         }
 
         /// <summary>
-        /// Итоговая стоимость с учётом скидки.
+        /// Итоговая стоимость с учётом всех скидок.
         /// </summary>
         public decimal FinalAmount
         {
@@ -183,6 +227,11 @@ namespace Marketplace.ViewModels
         }
 
         // ==================== КОМАНДЫ ====================
+
+        /// <summary>
+        /// Команда применения промокода.
+        /// </summary>
+        public ICommand ApplyPromoCodeCommand { get; private set; }
 
         /// <summary>
         /// Команда отображения списка товаров.
@@ -269,6 +318,7 @@ namespace Marketplace.ViewModels
             SearchCommand = new RelayCommand(_ => ApplyFilter());
             FilterByCategoryCommand = new RelayCommand(_ => ApplyFilter());
             RequestReturnCommand = new RelayCommand(RequestReturn);
+            ApplyPromoCodeCommand = new RelayCommand(_ => ApplyPromoCode(), _ => !string.IsNullOrWhiteSpace(PromoCode));
         }
 
         /// <summary>
@@ -304,10 +354,15 @@ namespace Marketplace.ViewModels
         /// </summary>
         private void ShowCart()
         {
+            // Сбрасываем промокод при открытии корзины
+            ResetPromoCode();
+
             var totals = _priceCalculator.CalculateOrderTotals(Cart.ToList());
             TotalAmount = totals.TotalAmount;
             DiscountAmount = totals.Discount;
             FinalAmount = totals.FinalAmount;
+            PromoDiscountAmount = 0;
+
             CurrentContent = new CartView(Cart, this);
         }
 
@@ -409,6 +464,74 @@ namespace Marketplace.ViewModels
         }
 
         /// <summary>
+        /// Применяет промокод к текущей корзине.
+        /// </summary>
+        private void ApplyPromoCode()
+        {
+            // Получаем промокод из БД
+            var promoCode = _databaseService.GetPromoCodeByCode(PromoCode);
+
+            if (promoCode == null)
+            {
+                PromoCodeMessage = "Промокод не найден";
+                PromoCodeSuccess = false;
+                PromoDiscountAmount = 0;
+                _appliedPromoCode = null;
+                UpdateFinalAmount();
+                return;
+            }
+
+            // Получаем количество использований промокода пользователем
+            var usageCount = _databaseService.GetUserPromoCodeUsageCount(promoCode.Id, 1);
+
+            // Валидация промокода
+            var validation = _promoCodeService.ValidatePromoCode(promoCode, TotalAmount, 1, usageCount);
+
+            if (!validation.IsValid)
+            {
+                PromoCodeMessage = validation.Message;
+                PromoCodeSuccess = false;
+                PromoDiscountAmount = 0;
+                _appliedPromoCode = null;
+                UpdateFinalAmount();
+                return;
+            }
+
+            // Рассчитываем скидку по промокоду
+            var promoDiscount = _promoCodeService.CalculateDiscount(promoCode, TotalAmount);
+            PromoDiscountAmount = promoDiscount;
+            _appliedPromoCode = promoCode;
+
+            // Обновляем итоговую сумму
+            UpdateFinalAmount();
+
+            // Формируем сообщение
+            PromoCodeMessage = _promoCodeService.GenerateMessage(promoCode, promoDiscount);
+            PromoCodeSuccess = true;
+        }
+
+        /// <summary>
+        /// Обновляет итоговую стоимость с учётом всех скидок.
+        /// </summary>
+        private void UpdateFinalAmount()
+        {
+            FinalAmount = TotalAmount - DiscountAmount - PromoDiscountAmount;
+            if (FinalAmount < 0) FinalAmount = 0;
+        }
+
+        /// <summary>
+        /// Сбрасывает применённый промокод.
+        /// </summary>
+        private void ResetPromoCode()
+        {
+            PromoCode = "";
+            PromoCodeMessage = "";
+            PromoCodeSuccess = false;
+            PromoDiscountAmount = 0;
+            _appliedPromoCode = null;
+        }
+
+        /// <summary>
         /// Оформляет заказ: проверяет наличие товаров, рассчитывает скидку,
         /// сохраняет заказ в БД, обновляет остатки и формирует чек.
         /// </summary>
@@ -440,12 +563,20 @@ namespace Marketplace.ViewModels
                 Status = "delivered",
                 TotalAmount = totals.TotalAmount,
                 DiscountAmount = totals.Discount,
-                FinalAmount = totals.FinalAmount,
+                FinalAmount = totals.FinalAmount - PromoDiscountAmount,
                 ShippingAddress = "Москва, ул. Примерная, д.1"
             };
 
+            if (order.FinalAmount < 0) order.FinalAmount = 0;
+
             _databaseService.AddOrder(order);
             Orders.Add(order);
+
+            // Сохраняем использованный промокод
+            if (_appliedPromoCode != null)
+            {
+                _databaseService.SavePromoCodeUsage(_appliedPromoCode.Id, 1, order.Id, PromoDiscountAmount);
+            }
 
             foreach (var item in Cart)
             {
